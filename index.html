@@ -118,8 +118,8 @@
         <div class="controls">
             <input 
                 type="text" 
-                id="videoId" 
-                placeholder="Enter YouTube Video ID (e.g., dQw4w9WgXcQ)"
+                id="videoUrl" 
+                placeholder="Paste full YouTube URL or Video ID (e.g., https://www.youtube.com/watch?v=yCVUIfH6hJc or yCVUIfH6hJc)"
                 autocomplete="off"
             >
             <button onclick="loadVideo()">Load Video</button>
@@ -143,22 +143,57 @@
     </div>
 
     <script>
+        function extractVideoId(input) {
+            // If it's already a video ID (11 characters), return it
+            if (/^[a-zA-Z0-9_-]{11}$/.test(input)) {
+                return input;
+            }
+
+            // Try to extract from youtube.com/watch?v=ID
+            let match = input.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+            if (match && match[1]) {
+                return match[1];
+            }
+
+            // Try to extract from youtu.be/ID
+            match = input.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+            if (match && match[1]) {
+                return match[1];
+            }
+
+            // Try to extract from youtube.com/embed/ID
+            match = input.match(/embed\/([a-zA-Z0-9_-]{11})/);
+            if (match && match[1]) {
+                return match[1];
+            }
+
+            // Try to extract from youtube-nocookie.com
+            match = input.match(/youtube-nocookie\.com\/embed\/([a-zA-Z0-9_-]{11})/);
+            if (match && match[1]) {
+                return match[1];
+            }
+
+            return null;
+        }
+
         function loadVideo() {
-            const videoId = document.getElementById('videoId').value.trim();
+            const input = document.getElementById('videoUrl').value.trim();
             const errorDiv = document.getElementById('error');
             const successDiv = document.getElementById('success');
             
             errorDiv.style.display = 'none';
             successDiv.style.display = 'none';
             
-            if (!videoId) {
-                showError('Please enter a valid YouTube Video ID');
+            if (!input) {
+                showError('Please enter a YouTube URL or Video ID');
                 return;
             }
             
-            // Validate YouTube Video ID format
-            if (!/^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
-                showError('Invalid YouTube Video ID format. Expected 11 alphanumeric characters.');
+            // Extract video ID from input
+            const videoId = extractVideoId(input);
+
+            if (!videoId) {
+                showError('Invalid YouTube URL or Video ID. Please use:\n• Full URL: https://www.youtube.com/watch?v=yCVUIfH6hJc\n• Short URL: https://youtu.be/yCVUIfH6hJc\n• Video ID: yCVUIfH6hJc');
                 return;
             }
             
@@ -186,7 +221,7 @@
         }
         
         // Allow loading video with Enter key
-        document.getElementById('videoId').addEventListener('keypress', function(event) {
+        document.getElementById('videoUrl').addEventListener('keypress', function(event) {
             if (event.key === 'Enter') {
                 loadVideo();
             }
